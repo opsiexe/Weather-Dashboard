@@ -14,7 +14,18 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 
 const app = express(); // Création de l'application Express.
-app.use(cors()); // Active CORS pour toutes les routes, afin que le frontend puisse appeler le backend.
+
+// Configuration CORS pour autoriser les requêtes depuis le frontend
+const corsOptions = {
+  origin: [
+    'http://localhost:4567',
+    'https://sae302.matheodorseuil.com',
+    'https://api-sae302.matheodorseuil.com'
+  ],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions)); // Active CORS avec les options définies
 app.use(express.json()); // Parse automatiquement le corps des requêtes JSON en objet JavaScript.
 
 const redisClient = createClient({ url: process.env.REDIS_URL }); // Création d'un client Redis en utilisant l'URL fournie dans le .env.
