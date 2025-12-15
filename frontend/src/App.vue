@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import Dashboard from './components/Dashboard.vue';
 import GeoLocationButton from './components/GeoLocationButton.vue';
-import Map from './components/map.vue';
+import Map from './components/Map.vue';
 
 // Références aux composants
 const mapRef = ref(null);

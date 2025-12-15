@@ -58,8 +58,26 @@ app.get('/weather/current', async (req, res) => {
     // Prépare l'URL pour l'appel API OpenWeatherMap pour les données météo actuelles.
 
     const response = await fetch(url);
+    
+    if (!response.ok) {
+      console.error(`OpenWeather API error: ${response.status} ${response.statusText}`);
+      if (response.status === 401) {
+        return res.status(500).json({ error: 'Clé API invalide ou expirée' });
+      } else if (response.status === 404) {
+        return res.status(404).json({ error: 'Données météo introuvables' });
+      } else if (response.status === 429) {
+        return res.status(429).json({ error: 'Limite API atteinte' });
+      }
+      return res.status(502).json({ error: 'Erreur API météo' });
+    }
+
     const data = await response.json();
     // Appelle l'API et récupère les données JSON.
+
+    // Vérifier que les données sont valides
+    if (!data || !data.current) {
+      return res.status(500).json({ error: 'Données météo invalides' });
+    }
 
     await redisClient.set(cacheKey, JSON.stringify(data), { EX: TTL_CURRENT });
     console.log("Data-stored-in-redis-on:", cacheKey);
@@ -68,8 +86,8 @@ app.get('/weather/current', async (req, res) => {
     res.json(data);
     // Renvoie les données au client.
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Impossible de récupérer les données de l’API' });
+    console.error('Erreur route /weather/current:', error);
+    res.status(500).json({ error: 'Impossible de récupérer les données de l\'API' });
     // Gestion des erreurs serveur.
   }
 });
@@ -93,15 +111,27 @@ app.get('/weather/hourly', async (req, res) => {
     console.log("API-call: ", url);
 
     const response = await fetch(url);
+    
+    if (!response.ok) {
+      console.error(`OpenWeather API error: ${response.status}`);
+      if (response.status === 401) return res.status(500).json({ error: 'Clé API invalide' });
+      if (response.status === 404) return res.status(404).json({ error: 'Données introuvables' });
+      if (response.status === 429) return res.status(429).json({ error: 'Limite API atteinte' });
+      return res.status(502).json({ error: 'Erreur API météo' });
+    }
+
     const data = await response.json();
+    if (!data || !data.hourly) {
+      return res.status(500).json({ error: 'Données invalides' });
+    }
 
     await redisClient.set(cacheKey, JSON.stringify(data), { EX: TTL_FORECAST });
     console.log("Data-stored-in-redis-on:", cacheKey);
 
     res.json(data);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Impossible de récupérer les données de l’API' });
+    console.error('Erreur route /weather/hourly:', error);
+    res.status(500).json({ error: 'Impossible de récupérer les données de l\'API' });
   }
 });
 
@@ -124,15 +154,27 @@ app.get('/weather/daily', async (req, res) => {
     console.log("API-call: ", url);
 
     const response = await fetch(url);
+    
+    if (!response.ok) {
+      console.error(`OpenWeather API error: ${response.status}`);
+      if (response.status === 401) return res.status(500).json({ error: 'Clé API invalide' });
+      if (response.status === 404) return res.status(404).json({ error: 'Données introuvables' });
+      if (response.status === 429) return res.status(429).json({ error: 'Limite API atteinte' });
+      return res.status(502).json({ error: 'Erreur API météo' });
+    }
+
     const data = await response.json();
+    if (!data || !data.daily) {
+      return res.status(500).json({ error: 'Données invalides' });
+    }
 
     await redisClient.set(cacheKey, JSON.stringify(data), { EX: TTL_FORECAST });
     console.log("Data-stored-in-redis-on:", cacheKey);
 
     res.json(data);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Impossible de récupérer les données de l’API' });
+    console.error('Erreur route /weather/daily:', error);
+    res.status(500).json({ error: 'Impossible de récupérer les données de l\'API' });
   }
 });
 
@@ -180,15 +222,28 @@ app.get('/geocoding', async (req, res) => {
     console.log("API-call: ", url);
 
     const response = await fetch(url);
+    
+    if (!response.ok) {
+      console.error(`Geocoding API error: ${response.status}`);
+      if (response.status === 401) return res.status(500).json({ error: 'Clé API invalide' });
+      if (response.status === 404) return res.status(404).json({ error: 'Ville introuvable' });
+      if (response.status === 429) return res.status(429).json({ error: 'Limite API atteinte' });
+      return res.status(502).json({ error: 'Erreur API géocodage' });
+    }
+
     const data = await response.json();
+    
+    if (!data || data.length === 0) {
+      return res.status(404).json({ error: 'Ville introuvable' });
+    }
 
     await redisClient.set(cacheKey, JSON.stringify(data));
     console.log("Data-stored-in-redis-on:", cacheKey);
 
     res.json(data);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Impossible de récupérer les données de l’API' });
+    console.error('Erreur route /geocoding:', error);
+    res.status(500).json({ error: 'Impossible de récupérer les données de l\'API' });
   }
 });
 
@@ -208,6 +263,15 @@ app.get('/geocoding/reverse', async (req, res) => {
     console.log("API-call: ", url);
 
     const response = await fetch(url);
+    
+    if (!response.ok) {
+      console.error(`Geocoding reverse API error: ${response.status}`);
+      if (response.status === 401) return res.status(500).json({ error: 'Clé API invalide' });
+      if (response.status === 404) return res.status(404).json({ error: 'Localisation introuvable' });
+      if (response.status === 429) return res.status(429).json({ error: 'Limite API atteinte' });
+      return res.status(502).json({ error: 'Erreur API géocodage' });
+    }
+
     const data = await response.json();
 
     await redisClient.set(cacheKey, JSON.stringify(data));
@@ -215,7 +279,7 @@ app.get('/geocoding/reverse', async (req, res) => {
 
     res.json(data);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Impossible de récupérer les données de l’API' });
+    console.error('Erreur route /geocoding/reverse:', error);
+    res.status(500).json({ error: 'Impossible de récupérer les données de l\'API' });
   }
 });

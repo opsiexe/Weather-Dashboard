@@ -14,7 +14,7 @@ services:
 
   frontend:
     build:
-      context: ./Frontend
+      context: ./frontend
       dockerfile: Dockerfile
     container_name: weather-frontend
     ports:
@@ -22,7 +22,7 @@ services:
     networks:
       - weather-net
     volumes:
-      - ./Frontend:/app
+      - ./frontend:/app
       - /app/node_modules
     depends_on:
       - backend

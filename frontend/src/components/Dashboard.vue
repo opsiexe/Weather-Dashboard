@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import SearchBar from './SearchBar.vue'
+import SearchBar from './searchBar.vue'
 import CurrentWeatherCard from './CurrentWeatherCard.vue'
 import WeatherAPI from '../services/weatherAPI.js'
 
@@ -17,10 +17,16 @@ const emit = defineEmits(['update-coords', 'dashboard-toggle'])
 
 const isOpen = ref(false)
 const searchValue = ref('')
+const searchError = ref(null)
+const isSearching = ref(false)
 
 const toggleDashboard = () => {
   isOpen.value = !isOpen.value
   emit('dashboard-toggle', isOpen.value)
+  // Réinitialiser l'erreur quand on ferme le dashboard
+  if (!isOpen.value) {
+    searchError.value = null
+  }
 }
 
 const openDashboard = () => {
@@ -38,8 +44,12 @@ const handleSearchClick = () => {
 // Gestion de la recherche de ville
 const handleCitySearch = async (cityName) => {
   if (!cityName || cityName.trim() === '') {
+    searchError.value = 'Veuillez entrer un nom de ville.'
     return
   }
+
+  isSearching.value = true
+  searchError.value = null
 
   try {
     console.log('🔍 Recherche de ville:', cityName)
@@ -61,9 +71,15 @@ const handleCitySearch = async (cityName) => {
       emit('dashboard-toggle', true)
     }
 
+    // Succès, on efface l'erreur et le champ de recherche
+    searchError.value = null
+    searchValue.value = ''
+
   } catch (error) {
     console.error('❌ Erreur recherche ville:', error)
-    alert(`Erreur: ${error.message}`)
+    searchError.value = error.message || 'Une erreur est survenue lors de la recherche.'
+  } finally {
+    isSearching.value = false
   }
 }
 
@@ -111,8 +127,29 @@ defineExpose({
         <!-- Barre de recherche (en dessous) -->
         <div class="search-bar-wrapper" @click="handleSearchClick">
           <SearchBar v-model="searchValue" placeholder="Rechercher une ville"
-            :class="isOpen ? 'pointer-events-auto' : ''" @search="handleCitySearch" />
+            :class="isOpen ? 'pointer-events-auto' : ''" :disabled="isSearching" @search="handleCitySearch" />
         </div>
+
+        <!-- Message d'erreur de recherche -->
+        <transition name="fade">
+          <div v-if="searchError"
+            class="error-message mx-4 mt-2 p-3 bg-red-500/90 text-white rounded-lg text-sm flex items-center gap-2 shadow-lg">
+            <font-awesome-icon icon="exclamation-circle" class="text-lg" />
+            <span>{{ searchError }}</span>
+            <button @click="searchError = null" class="ml-auto hover:bg-red-600 p-1 rounded transition-colors">
+              <font-awesome-icon icon="times" />
+            </button>
+          </div>
+        </transition>
+
+        <!-- Indicateur de chargement recherche -->
+        <transition name="fade">
+          <div v-if="isSearching"
+            class="loading-message mx-4 mt-2 p-3 bg-blue-500/90 text-white rounded-lg text-sm flex items-center gap-2 shadow-lg">
+            <font-awesome-icon icon="circle-notch" spin class="text-lg" />
+            <span>Recherche en cours...</span>
+          </div>
+        </transition>
 
       </div>
 
@@ -508,5 +545,34 @@ defineExpose({
 
 .dashboard-header.is-closed .search-bar-wrapper :deep(.search-bar-container) {
   margin: 0 !important;
+}
+
+/* Messages d'erreur et de chargement */
+.error-message,
+.loading-message {
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Transition fade pour les messages */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

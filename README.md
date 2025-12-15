@@ -122,11 +122,37 @@ graph TB
 
 ### Prérequis
 
-- [Node.js](https://nodejs.org/) (version 16 ou supérieure)
 - [Docker](https://www.docker.com/) et [Docker Compose](https://docs.docker.com/compose/)
 - Clé API [OpenWeatherMap](https://openweathermap.org/api) (gratuite)
+- Git (pour cloner le repository)
 
-### Installation locale
+### 🚀 Démarrage Rapide (Recommandé)
+
+**Option 1 : Script automatique (Windows)**
+
+```bash
+# Cloner le projet
+git clone https://github.com/opsiexe/SAE302-LD-MV-MD.git
+cd SAE302-LD-MV-MD
+
+# Double-cliquer sur start.bat
+# OU exécuter depuis PowerShell :
+.\start.bat
+```
+
+**Option 2 : Script automatique (Linux/Mac)**
+
+```bash
+# Cloner le projet
+git clone https://github.com/opsiexe/SAE302-LD-MV-MD.git
+cd SAE302-LD-MV-MD
+
+# Rendre le script exécutable et lancer
+chmod +x start.sh
+./start.sh
+```
+
+**Option 3 : Installation manuelle**
 
 1. **Cloner le repository**
 
@@ -135,33 +161,49 @@ git clone https://github.com/opsiexe/SAE302-LD-MV-MD.git
 cd SAE302-LD-MV-MD
 ```
 
-2. **Variables d'environnement**
-   Créer un fichier `.env` dans le dossier `backend/` :
-
-```env
-# API OpenWeatherMap
-OPENWEATHER_API_KEY=votre_clé_api_ici
-
-# Configuration serveur
-PORT=5000
-NODE_ENV=development
-
-# Configuration Redis
-REDIS_URL=redis://localhost:6379
-
-# Configuration cache (en secondes)
-CACHE_TTL_CURRENT=300    # 5 minutes pour météo actuelle
-CACHE_TTL_FORECAST=3600  # 1 heure pour prévisions
-```
-
-### Installation Docker (Recommandée)
+2. **Configurer les variables d'environnement**
 
 ```bash
-# Cloner et lancer avec Docker Compose
-git clone https://github.com/opsiexe/SAE302-LD-MV-MD.git
-cd SAE302-LD-MV-MD
-docker-compose up --build
+# Copier le fichier d'exemple
+cp backend/.env.example backend/.env
+
+# Éditer backend/.env et ajouter votre clé API
+# WEATHER_API_KEY=votre_cle_api_ici
+# GEOCODING_API_KEY=votre_cle_api_ici
 ```
+
+3. **Lancer avec Docker Compose**
+
+```bash
+docker-compose up --build -d
+```
+
+4. **Valider l'installation**
+
+```bash
+# Vérifier que tout fonctionne
+docker-compose exec backend node validate-env.js
+
+# Tester le backend
+curl http://localhost:5000/ping
+```
+
+5. **Accéder à l'application**
+   - Frontend : http://localhost:3000
+   - Backend : http://localhost:5000
+
+### 📝 Obtenir une clé API OpenWeather
+
+1. Créez un compte sur [OpenWeatherMap](https://openweathermap.org/api)
+2. Allez dans "API keys"
+3. Copiez votre clé
+4. Collez-la dans `backend/.env` :
+   ```
+   WEATHER_API_KEY=votre_cle_copiee
+   GEOCODING_API_KEY=votre_cle_copiee
+   ```
+
+⚠️ **Note :** Les nouvelles clés API peuvent prendre jusqu'à 2 heures pour être activées.
 
 ## 📁 Structure du projet
 
@@ -169,25 +211,43 @@ docker-compose up --build
 SAE302-LD-MV-MD/
 ├── 📄 README.md                 # Documentation du projet
 ├── 📄 LICENCE                   # Licence MIT
-├── 🐳 docker-compose.yml        # Configuration Docker
-├── 🐳 docker-compose.network.yml # Configuration réseau Docker
-├──
+├── � CHANGELOG.md              # ✨ Journal des modifications
+├── 📄 TROUBLESHOOTING.md        # ✨ Guide de dépannage complet
+├── 📄 FIXES_SUMMARY.md          # ✨ Résumé des corrections v2.0
+├── 🐳 docker-compose.yml        # Configuration Docker (✅ corrigé)
+├── 🚀 start.bat                 # ✨ Script démarrage Windows
+├── 🚀 start.sh                  # ✨ Script démarrage Linux/Mac
+│
 ├── 📂 backend/                  # API Node.js + Express
 │   ├── 🐳 Dockerfile           # Image Docker backend
 │   ├── 📦 package.json         # Dépendances Node.js
-│   └── 🚀 server.js            # Point d'entrée serveur
+│   ├── 🚀 server.js            # Point d'entrée serveur (✅ gestion erreur améliorée)
+│   ├── 🔧 validate-env.js      # ✨ Script validation environnement
+│   ├── 📋 .env.example         # Exemple de configuration
+│   └── 🔒 .env                 # Variables d'environnement (à créer)
 │
 └── 📂 frontend/                 # Application Vue.js
     ├── 🐳 Dockerfile           # Image Docker frontend
     ├── 📦 package.json         # Dépendances frontend
     ├── ⚙️ vite.config.js       # Configuration Vite
     ├── 🌐 index.html           # Point d'entrée HTML
-    ├──
+    │
     ├── 📂 public/              # Assets statiques
     │   └── 🖼️ vite.svg
     │
     └── 📂 src/                 # Code source Vue.js
-        ├── 🎯 App.vue          # Composant racine
+        ├── 🎯 App.vue          # Composant racine (✅ import corrigé)
+        ├── ⚙️ config.js        # Configuration API
+        │
+        ├── 📂 components/       # Composants Vue
+        │   ├── Dashboard.vue    # ✅ Import + gestion erreur
+        │   ├── searchBar.vue    # Barre de recherche
+        │   ├── Map.vue          # Carte interactive
+        │   ├── CurrentWeatherCard.vue
+        │   └── GeoLocationButton.vue
+        │
+        └── 📂 services/         # Services API
+            └── weatherAPI.js    # ✅ Timeout + gestion erreur
         ├── 🚀 main.js          # Point d'entrée JS
         ├── ⚙️ config.js        # Configuration app
         ├── 🎨 style.css        # Styles globaux
@@ -240,13 +300,13 @@ export const config = {
 
 ### Endpoints Backend
 
-| Méthode | Endpoint            | Description                  | Paramètres      |
-| ------- | ------------------- | ---------------------------- | --------------- |
-| `GET`   | `/ping`             | Test de santé du serveur     | -               |
-| `GET`   | `/weather/current`  | Météo actuelle               | `lat`, `lon`    |
-| `GET`   | `/weather/hourly`   | Prévisions horaires (48h)    | `lat`, `lon`    |
-| `GET`   | `/weather/daily`    | Prévisions journalières (7j) | `lat`, `lon`    |
-| `GET`   | `/weather/alerts`   | Alertes météorologiques      | `lat`, `lon`    |
+| Méthode | Endpoint            | Description                  | Paramètres         |
+| ------- | ------------------- | ---------------------------- | ------------------ |
+| `GET`   | `/ping`             | Test de santé du serveur     | -                  |
+| `GET`   | `/weather/current`  | Météo actuelle               | `lat`, `lon`       |
+| `GET`   | `/weather/hourly`   | Prévisions horaires (48h)    | `lat`, `lon`       |
+| `GET`   | `/weather/daily`    | Prévisions journalières (7j) | `lat`, `lon`       |
+| `GET`   | `/weather/alerts`   | Alertes météorologiques      | `lat`, `lon`       |
 | `GET`   | `/geocoding/search` | Recherche de ville           | `city` (nom ville) |
 
 ### Exemple d'utilisation
@@ -318,13 +378,157 @@ Ce projet est sous licence MIT. Voir le fichier [LICENCE](./LICENCE) pour plus d
 - [Documentation Mapbox GL JS](https://docs.mapbox.com/mapbox-gl-js/)
 - [Docker Compose](https://docs.docker.com/compose/)
 
-## 🆘 Support
+## 🆘 Support & Dépannage
 
-En cas de problème :
+### Problèmes courants et solutions
 
-1. Vérifiez que tous les services Docker sont en marche : `docker-compose ps`
-2. Consultez les logs : `docker-compose logs -f [service]`
-3. Vérifiez la configuration des variables d'environnement
-4. Assurez-vous que votre clé API OpenWeatherMap est valide
+#### 🔄 Écran de chargement infini lors de la recherche d'une ville
+
+**Causes possibles :**
+
+1. **Backend non démarré** : Le frontend ne peut pas se connecter au serveur
+
+   ```bash
+   # Vérifier l'état des conteneurs
+   docker-compose ps
+
+   # Redémarrer les services
+   docker-compose restart
+   ```
+
+2. **Clé API OpenWeather invalide ou expirée**
+
+   - Vérifiez que votre clé API est correcte dans le fichier `.env` du backend
+   - Vérifiez les limites de votre compte OpenWeather (appels/jour)
+   - Les logs backend montreront : `OpenWeather API error: 401`
+
+3. **Problème de cache Redis**
+
+   ```bash
+   # Redémarrer Redis
+   docker-compose restart redis
+   ```
+
+4. **Timeout réseau**
+   - Les requêtes expirent après 15 secondes
+   - Vérifiez votre connexion Internet
+   - Les logs frontend montreront : "La requête a expiré"
+
+**Solution rapide :**
+
+```bash
+# Arrêter tous les services
+docker-compose down
+
+# Reconstruire et redémarrer
+docker-compose up --build -d
+
+# Vérifier les logs
+docker-compose logs -f backend
+```
+
+#### 📁 Erreur : Cannot find module './components/Map.vue'
+
+**Problème :** Casse (majuscule/minuscule) incorrecte dans les imports
+
+- ✅ Corrigé : Les imports correspondent maintenant aux noms de fichiers exacts
+
+#### 🐳 Docker ne trouve pas le dossier frontend
+
+**Problème :** docker-compose pointait vers `./Frontend` (majuscule)
+
+- ✅ Corrigé : docker-compose.yml pointe maintenant vers `./frontend` (minuscule)
+
+#### 🌐 Erreur CORS ou connexion refusée
+
+**Causes :**
+
+1. Le backend n'est pas accessible sur le port 5000
+2. Problème de configuration réseau Docker
+
+**Solutions :**
+
+```bash
+# Vérifier les ports
+docker-compose ps
+
+# Vérifier que le port 5000 est libre
+netstat -an | findstr 5000
+
+# Recréer le réseau Docker
+docker-compose down
+docker network prune
+docker-compose up -d
+```
+
+#### 💾 Erreur Redis : Connection refused
+
+**Solution :**
+
+```bash
+# Vérifier que Redis est démarré
+docker-compose logs redis
+
+# Redémarrer Redis
+docker-compose restart redis
+```
+
+### Commandes utiles
+
+```bash
+# Voir les logs de tous les services
+docker-compose logs -f
+
+# Voir les logs d'un service spécifique
+docker-compose logs -f backend
+docker-compose logs -f frontend
+docker-compose logs -f redis
+
+# Vérifier l'état des conteneurs
+docker-compose ps
+
+# Redémarrer un service
+docker-compose restart [service]
+
+# Reconstruire après modifications du code
+docker-compose up --build -d
+
+# Nettoyer et repartir de zéro
+docker-compose down -v
+docker-compose up --build -d
+```
+
+### Vérifications de base
+
+1. **Variables d'environnement** : Vérifiez le fichier `.env` du backend
+
+   ```
+   WEATHER_API_KEY=votre_cle_api
+   GEOCODING_API_KEY=votre_cle_api
+   REDIS_URL=redis://redis:6379
+   PORT=5000
+   ```
+
+2. **Clé API OpenWeather** : Testez-la avec curl
+
+   ```bash
+   curl "https://api.openweathermap.org/data/3.0/onecall?lat=48.8566&lon=2.3522&appid=VOTRE_CLE&units=metric"
+   ```
+
+3. **Connectivité réseau** : Testez l'accès au backend
+   ```bash
+   curl http://localhost:5000/ping
+   # Devrait retourner : {"message":"pong"}
+   ```
+
+### Messages d'erreur courants
+
+| Message                                 | Cause                      | Solution                       |
+| --------------------------------------- | -------------------------- | ------------------------------ |
+| "Impossible de se connecter au serveur" | Backend non démarré        | `docker-compose up -d backend` |
+| "La requête a expiré"                   | Timeout réseau (>15s)      | Vérifier connexion Internet    |
+| "Ville introuvable"                     | Nom de ville incorrect     | Vérifier l'orthographe         |
+| "Clé API invalide"                      | Clé OpenWeather incorrecte | Vérifier le fichier `.env`     |
+| "Limite API atteinte"                   | Quota OpenWeather dépassé  | Attendre ou upgrader le plan   |
 
 Pour signaler un bug ou demander une fonctionnalité, ouvrez une [issue](https://github.com/opsiexe/SAE302-LD-MV-MD/issues) sur GitHub.

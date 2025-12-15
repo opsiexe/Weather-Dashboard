@@ -1,6 +1,30 @@
 import { config } from '../config.js';
 
 const API_BASE_URL = config.apiBaseUrl;
+const REQUEST_TIMEOUT = 15000; // 15 secondes timeout
+
+/**
+ * Fonction utilitaire pour faire des requêtes avec timeout
+ * @param {string} url - URL à requêter
+ * @param {number} timeout - Timeout en millisecondes
+ * @returns {Promise<Response>}
+ */
+const fetchWithTimeout = async (url, timeout = REQUEST_TIMEOUT) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      throw new Error('La requête a expiré. Veuillez vérifier votre connexion internet.');
+    }
+    throw error;
+  }
+};
 
 class WeatherAPI {
   /**
@@ -11,9 +35,14 @@ class WeatherAPI {
    */
   static async getCurrentWeather(lat, lon) {
     try {
-      const response = await fetch(`${API_BASE_URL}/weather/current?lat=${lat}&lon=${lon}`);
+      const response = await fetchWithTimeout(`${API_BASE_URL}/weather/current?lat=${lat}&lon=${lon}`);
       
       if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Données météo introuvables pour cette localisation.');
+        } else if (response.status === 500) {
+          throw new Error('Erreur du serveur. Veuillez réessayer plus tard.');
+        }
         throw new Error(`Erreur ${response.status}: ${response.statusText}`);
       }
       
@@ -22,6 +51,9 @@ class WeatherAPI {
       return data;
     } catch (error) {
       console.error('Erreur lors de la récupération de la météo actuelle:', error);
+      if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        throw new Error('Impossible de se connecter au serveur. Vérifiez que le backend est démarré.');
+      }
       throw error;
     }
   }
@@ -34,9 +66,14 @@ class WeatherAPI {
    */
   static async getHourlyForecast(lat, lon) {
     try {
-      const response = await fetch(`${API_BASE_URL}/weather/hourly?lat=${lat}&lon=${lon}`);
+      const response = await fetchWithTimeout(`${API_BASE_URL}/weather/hourly?lat=${lat}&lon=${lon}`);
       
       if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Prévisions horaires introuvables.');
+        } else if (response.status === 500) {
+          throw new Error('Erreur du serveur. Veuillez réessayer plus tard.');
+        }
         throw new Error(`Erreur ${response.status}: ${response.statusText}`);
       }
       
@@ -45,6 +82,9 @@ class WeatherAPI {
       return data;
     } catch (error) {
       console.error('Erreur lors de la récupération des prévisions horaires:', error);
+      if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        throw new Error('Impossible de se connecter au serveur.');
+      }
       throw error;
     }
   }
@@ -57,9 +97,14 @@ class WeatherAPI {
    */
   static async getDailyForecast(lat, lon) {
     try {
-      const response = await fetch(`${API_BASE_URL}/weather/daily?lat=${lat}&lon=${lon}`);
+      const response = await fetchWithTimeout(`${API_BASE_URL}/weather/daily?lat=${lat}&lon=${lon}`);
       
       if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Prévisions journalières introuvables.');
+        } else if (response.status === 500) {
+          throw new Error('Erreur du serveur. Veuillez réessayer plus tard.');
+        }
         throw new Error(`Erreur ${response.status}: ${response.statusText}`);
       }
       
@@ -68,6 +113,9 @@ class WeatherAPI {
       return data;
     } catch (error) {
       console.error('Erreur lors de la récupération des prévisions journalières:', error);
+      if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        throw new Error('Impossible de se connecter au serveur.');
+      }
       throw error;
     }
   }
@@ -79,9 +127,20 @@ class WeatherAPI {
    */
   static async searchCity(cityName) {
     try {
-      const response = await fetch(`${API_BASE_URL}/geocoding?city=${encodeURIComponent(cityName)}`);
+      if (!cityName || cityName.trim() === '') {
+        throw new Error('Veuillez entrer un nom de ville.');
+      }
+
+      const response = await fetchWithTimeout(`${API_BASE_URL}/geocoding?city=${encodeURIComponent(cityName)}`);
       
       if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error(`Ville "${cityName}" introuvable.`);
+        } else if (response.status === 500) {
+          throw new Error('Erreur du serveur. Veuillez réessayer plus tard.');
+        } else if (response.status === 400) {
+          throw new Error('Requête invalide. Vérifiez le nom de la ville.');
+        }
         throw new Error(`Erreur ${response.status}: ${response.statusText}`);
       }
       
@@ -100,9 +159,12 @@ class WeatherAPI {
         };
       }
       
-      throw new Error(`Ville "${cityName}" non trouvée`);
+      throw new Error(`Ville "${cityName}" introuvable. Vérifiez l'orthographe.`);
     } catch (error) {
       console.error('Erreur lors de la recherche de ville:', error);
+      if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        throw new Error('Impossible de se connecter au serveur. Vérifiez que le backend est actif.');
+      }
       throw error;
     }
   }
@@ -115,10 +177,12 @@ class WeatherAPI {
    */
   static async getCityName(lat, lon) {
     try {
-      const response = await fetch(`${API_BASE_URL}/geocoding/reverse?lat=${lat}&lon=${lon}`);
+      const response = await fetchWithTimeout(`${API_BASE_URL}/geocoding/reverse?lat=${lat}&lon=${lon}`);
       
       if (!response.ok) {
-        throw new Error(`Erreur ${response.status}: ${response.statusText}`);
+        // En cas d'erreur, on retourne les coordonnées plutôt que d'échouer
+        console.warn(`Erreur géocodage inverse ${response.status}, utilisation des coordonnées`);
+        return `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`;
       }
       
       const data = await response.json();
