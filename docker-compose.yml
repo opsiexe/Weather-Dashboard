@@ -31,7 +31,7 @@ services:
       - VITE_API_URL=${VITE_API_URL:-}
       - VITE_MAPBOX_ACCESS_TOKEN=${VITE_MAPBOX_ACCESS_TOKEN}
     ports:
-      - "4567:3000"
+      - "4567:80"
     networks:
       - weather-net
     depends_on:
