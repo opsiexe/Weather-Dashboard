@@ -11,7 +11,7 @@ RUN npm install
 # Copy rest of the code
 COPY . .
 
-EXPOSE 3000
+EXPOSE 5000
 
 # Use your npm dev script
 CMD ["npm", "run", "dev"]

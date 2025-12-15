@@ -23,7 +23,7 @@ redisClient.connect().catch(console.error); // Connexion au serveur Redis. Si er
 app.get('/ping', (req, res) => res.json({ message: 'pong' })); // Route test pour vérifier que le backend fonctionne. Retourne un JSON { message: 'pong' }.
 
 const server = app.listen(process.env.PORT || 5000, () =>
-  console.log('Backend running on port 5000')
+  console.log(`Backend running on port ${process.env.PORT || 5000}`)
 ); 
 // Lancement du serveur HTTP sur le port défini dans .env (ou 5000 par défaut). Log dans la console.
 

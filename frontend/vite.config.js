@@ -9,6 +9,8 @@ export default defineConfig({
     tailwindcss(),
   ],
   server: {
+    host: true,
+    port: 3000,
     watch: {
       usePolling: true, // utile si tu es sur un réseau ou VM
     },
