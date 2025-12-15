@@ -214,6 +214,7 @@ app.get('/weather/alerts', async (req, res) => {
 
 /**
  * Route : géocodage (ville → coordonnées)
+ * Utilise Nominatim car l'API Geocoding OpenWeatherMap nécessite une souscription
  */
 app.get('/geocoding', async (req, res) => {
   try {
@@ -224,26 +225,39 @@ app.get('/geocoding', async (req, res) => {
     const cached = await redisClient.get(cacheKey);
     if(cached) return res.json(JSON.parse(cached));
 
-    const url = `http://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${process.env.GEOCODING_API_KEY}`;
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1&addressdetails=1`;
     console.log("API-call: ", url);
 
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'WeatherDashboard/1.0'
+      }
+    });
     
     if (!response.ok) {
       console.error(`Geocoding API error: ${response.status}`);
-      if (response.status === 401) return res.status(500).json({ error: 'Clé API invalide' });
       if (response.status === 404) return res.status(404).json({ error: 'Ville introuvable' });
       if (response.status === 429) return res.status(429).json({ error: 'Limite API atteinte' });
       return res.status(502).json({ error: 'Erreur API géocodage' });
     }
 
-    const data = await response.json();
+    const nominatimData = await response.json();
     
-    if (!data || data.length === 0) {
+    if (!nominatimData || nominatimData.length === 0) {
       return res.status(404).json({ error: 'Ville introuvable' });
     }
 
-    await redisClient.set(cacheKey, JSON.stringify(data));
+    // Transformer au format OpenWeatherMap pour compatibilité frontend
+    const data = nominatimData.map(loc => ({
+      name: loc.address?.city || loc.address?.town || loc.address?.village || loc.name || loc.display_name.split(',')[0],
+      local_names: {},
+      lat: parseFloat(loc.lat),
+      lon: parseFloat(loc.lon),
+      country: loc.address?.country_code?.toUpperCase() || '',
+      state: loc.address?.state || ''
+    }));
+
+    await redisClient.set(cacheKey, JSON.stringify(data), { EX: TTL_FORECAST });
     console.log("Data-stored-in-redis-on:", cacheKey);
 
     res.json(data);
@@ -255,6 +269,7 @@ app.get('/geocoding', async (req, res) => {
 
 /**
  * Route : géocodage inverse (coordonnées → ville)
+ * Utilise Nominatim car l'API Geocoding OpenWeatherMap nécessite une souscription
  */
 app.get('/geocoding/reverse', async (req, res) => {
   try {
@@ -265,22 +280,35 @@ app.get('/geocoding/reverse', async (req, res) => {
     const cached = await redisClient.get(cacheKey);
     if(cached) return res.json(JSON.parse(cached));
 
-    const url = `http://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${process.env.GEOCODING_API_KEY}`;
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`;
     console.log("API-call: ", url);
 
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'WeatherDashboard/1.0'
+      }
+    });
     
     if (!response.ok) {
       console.error(`Geocoding reverse API error: ${response.status}`);
-      if (response.status === 401) return res.status(500).json({ error: 'Clé API invalide' });
       if (response.status === 404) return res.status(404).json({ error: 'Localisation introuvable' });
       if (response.status === 429) return res.status(429).json({ error: 'Limite API atteinte' });
       return res.status(502).json({ error: 'Erreur API géocodage' });
     }
 
-    const data = await response.json();
+    const nominatimData = await response.json();
+    
+    // Transformer au format OpenWeatherMap pour compatibilité frontend
+    const data = [{
+      name: nominatimData.address?.city || nominatimData.address?.town || nominatimData.address?.village || nominatimData.address?.municipality || 'Localisation inconnue',
+      local_names: {},
+      lat: parseFloat(nominatimData.lat),
+      lon: parseFloat(nominatimData.lon),
+      country: nominatimData.address?.country_code?.toUpperCase() || '',
+      state: nominatimData.address?.state || nominatimData.address?.region || ''
+    }];
 
-    await redisClient.set(cacheKey, JSON.stringify(data));
+    await redisClient.set(cacheKey, JSON.stringify(data), { EX: TTL_FORECAST });
     console.log("Data-stored-in-redis-on:", cacheKey);
 
     res.json(data);
