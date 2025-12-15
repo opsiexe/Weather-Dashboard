@@ -128,32 +128,6 @@ graph TB
 
 ### 🚀 Démarrage Rapide (Recommandé)
 
-**Option 1 : Script automatique (Windows)**
-
-```bash
-# Cloner le projet
-git clone https://github.com/opsiexe/SAE302-LD-MV-MD.git
-cd SAE302-LD-MV-MD
-
-# Double-cliquer sur start.bat
-# OU exécuter depuis PowerShell :
-.\start.bat
-```
-
-**Option 2 : Script automatique (Linux/Mac)**
-
-```bash
-# Cloner le projet
-git clone https://github.com/opsiexe/SAE302-LD-MV-MD.git
-cd SAE302-LD-MV-MD
-
-# Rendre le script exécutable et lancer
-chmod +x start.sh
-./start.sh
-```
-
-**Option 3 : Installation manuelle**
-
 1. **Cloner le repository**
 
 ```bash
@@ -164,10 +138,10 @@ cd SAE302-LD-MV-MD
 2. **Configurer les variables d'environnement**
 
 ```bash
-# Copier le fichier d'exemple
-cp backend/.env.example backend/.env
+# Copier le fichier d'exemple à la racine
+cp .env.example .env
 
-# Éditer backend/.env et ajouter votre clé API
+# Éditer .env et ajouter vos clés API
 # WEATHER_API_KEY=votre_cle_api_ici
 # GEOCODING_API_KEY=votre_cle_api_ici
 ```
@@ -178,17 +152,7 @@ cp backend/.env.example backend/.env
 docker-compose up --build -d
 ```
 
-4. **Valider l'installation**
-
-```bash
-# Vérifier que tout fonctionne
-docker-compose exec backend node validate-env.js
-
-# Tester le backend
-curl http://localhost:5000/ping
-```
-
-5. **Accéder à l'application**
+4. **Accéder à l'application**
    - Frontend : http://localhost:3000
    - Backend : http://localhost:5000
 
@@ -197,7 +161,7 @@ curl http://localhost:5000/ping
 1. Créez un compte sur [OpenWeatherMap](https://openweathermap.org/api)
 2. Allez dans "API keys"
 3. Copiez votre clé
-4. Collez-la dans `backend/.env` :
+4. Collez-la dans `.env` à la racine du projet :
    ```
    WEATHER_API_KEY=votre_cle_copiee
    GEOCODING_API_KEY=votre_cle_copiee
@@ -211,20 +175,13 @@ curl http://localhost:5000/ping
 SAE302-LD-MV-MD/
 ├── 📄 README.md                 # Documentation du projet
 ├── 📄 LICENCE                   # Licence MIT
-├── � CHANGELOG.md              # ✨ Journal des modifications
-├── 📄 TROUBLESHOOTING.md        # ✨ Guide de dépannage complet
-├── 📄 FIXES_SUMMARY.md          # ✨ Résumé des corrections v2.0
-├── 🐳 docker-compose.yml        # Configuration Docker (✅ corrigé)
-├── 🚀 start.bat                 # ✨ Script démarrage Windows
-├── 🚀 start.sh                  # ✨ Script démarrage Linux/Mac
+├── 🐳 docker-compose.yml        # Configuration Docker
+├── 🔒 .env.example              # Modèle de configuration
 │
 ├── 📂 backend/                  # API Node.js + Express
 │   ├── 🐳 Dockerfile           # Image Docker backend
 │   ├── 📦 package.json         # Dépendances Node.js
-│   ├── 🚀 server.js            # Point d'entrée serveur (✅ gestion erreur améliorée)
-│   ├── 🔧 validate-env.js      # ✨ Script validation environnement
-│   ├── 📋 .env.example         # Exemple de configuration
-│   └── 🔒 .env                 # Variables d'environnement (à créer)
+│   └── 🚀 server.js            # Point d'entrée serveur
 │
 └── 📂 frontend/                 # Application Vue.js
     ├── 🐳 Dockerfile           # Image Docker frontend

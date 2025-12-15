@@ -1,10 +1,16 @@
-import express from 'express'; // Importation du framework Express pour créer le serveur HTTP.
-import cors from 'cors';  // Importation du middleware CORS pour gérer les requêtes cross-origin (autoriser le frontend à appeler le backend depuis un autre port).
-import dotenv from 'dotenv'; // Importation de dotenv pour charger les variables d'environnement depuis un fichier .env.
-import { createClient } from 'redis'; // Importation de la fonction pour créer un client Redis, utilisé pour mettre en cache les réponses.
-import { WebSocketServer } from 'ws'; // Importation de WebSocketServer pour gérer les connexions WebSocket (communication temps réel).
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { createClient } from 'redis';
+import { WebSocketServer } from 'ws';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-dotenv.config(); // Charge les variables d'environnement du fichier .env dans process.env.
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Charge les variables d'environnement depuis le répertoire parent (racine du projet)
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 
 const app = express(); // Création de l'application Express.
