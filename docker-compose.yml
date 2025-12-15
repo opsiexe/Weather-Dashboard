@@ -16,9 +16,6 @@ services:
       - "8742:5000"
     networks:
       - weather-net
-    volumes:
-    - ./backend:/app
-    - /app/node_modules
     depends_on:
       - redis
 
@@ -37,9 +34,6 @@ services:
       - "4567:3000"
     networks:
       - weather-net
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
     depends_on:
       - backend
 
